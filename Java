@@ -1,7 +1,30 @@
 public class Main {
+
+    static final int MAX_HEALTH = 100;
+    static final double CRIT_CHANCE = 0.25;
+
     public static void main(String[] args) {
+
+        String playerName = "Fighter";
+        int playerHealth = 100;
+        double playerSpeed = 7.5;
+        boolean isAlive = true;
+
+        String opponentName = "Shadow";
+        int opponentHealth = 80;
+        int opponentPower = 15;
+
         System.out.println("Hello!");
         System.out.println("Welcome to my game.");
         System.out.println("This is my arena.");
+
+        System.out.println("Player: " + playerName);
+        System.out.println("Health: " + playerHealth);
+        System.out.println("Speed: " + playerSpeed);
+        System.out.println("Alive: " + isAlive);
+
+        System.out.println("Opponent: " + opponentName);
+        System.out.println("Opponent Health: " + opponentHealth);
+        System.out.println("Opponent Power: " + opponentPower);
     }
 }
