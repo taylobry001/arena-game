@@ -1,30 +1,104 @@
+import java.util.Scanner;
+
 public class Main {
 
     static final int MAX_HEALTH = 100;
     static final double CRIT_CHANCE = 0.25;
 
     public static void main(String[] args) {
-
-        String playerName = "Fighter";
-        int playerHealth = 100;
-        double playerSpeed = 7.5;
-        boolean isAlive = true;
-
-        String opponentName = "Shadow";
-        int opponentHealth = 80;
-        int opponentPower = 15;
+        Scanner in = new Scanner(System.in);
 
         System.out.println("Hello!");
         System.out.println("Welcome to my game.");
         System.out.println("This is my arena.");
+        System.out.println("");
 
-        System.out.println("Player: " + playerName);
-        System.out.println("Health: " + playerHealth);
-        System.out.println("Speed: " + playerSpeed);
-        System.out.println("Alive: " + isAlive);
+        System.out.print("What is your name, challenger? ");
+        String playerName = in.nextLine().trim();
+        if (playerName.isEmpty()) {
+            playerName = "Fighter";
+        }
 
-        System.out.println("Opponent: " + opponentName);
-        System.out.println("Opponent Health: " + opponentHealth);
-        System.out.println("Opponent Power: " + opponentPower);
+        int difficulty;
+        do {
+            System.out.print("Difficulty (1 = easy, 2 = normal, 3 = brutal): ");
+            while (!in.hasNextInt()) {
+                System.out.print("Numbers only. Try again: ");
+                in.next();
+            }
+            difficulty = in.nextInt();
+        } while (difficulty < 1 || difficulty > 3);
+        in.nextLine(); 
+
+        int playerHealth = MAX_HEALTH;
+        double playerSpeed = 7.5;
+        boolean isAlive = true;
+
+        String opponentName = "Shadow";
+        int opponentHealth = 40 * difficulty; 
+        int opponentPower = 5 + (difficulty * 5); 
+
+        System.out.printf("%n%s enters the arena to face %s!%n", playerName, opponentName);
+        System.out.print("Press Enter to begin...");
+        in.nextLine();
+        System.out.println("");
+
+        int turnNumber = 1;
+        boolean playing = true;
+
+        while (playing) {
+            System.out.println("--- TURN " + turnNumber + " ---");
+            System.out.println("Player: " + playerName + " (HP: " + playerHealth + "/" + MAX_HEALTH + ")");
+            System.out.println("Speed: " + playerSpeed + " | Alive: " + isAlive);
+            System.out.println("Opponent: " + opponentName + " (HP: " + opponentHealth + " | Power: " + opponentPower + ")");
+            System.out.println("");
+            
+            System.out.print("Actions: [A]ttack, [F]lee, [S]tatus (Free): ");
+            String action = in.nextLine().trim().toUpperCase();
+
+            if (action.equals("S")) {
+                System.out.printf("%n--- CHARACTER SHEET ---%n");
+                System.out.printf("Crit Chance: %.0f%%%n", CRIT_CHANCE * 100);
+                System.out.printf("-----------------------%n%n");
+                continue; 
+            }
+
+            if (action.equals("A")) {
+                int roll = (turnNumber * 3) % 10 + 1;
+                int playerDamage = 8 + roll;
+                
+                System.out.printf("You strike %s with an attack roll of %d for %d damage!%n", opponentName, roll, playerDamage);
+                opponentHealth -= playerDamage;
+            } else if (action.equals("F")) {
+                isAlive = false; 
+            } else {
+                System.out.println("You hesitate and stumble around!");
+            }
+
+            if (isAlive && opponentHealth > 0) {
+                playerHealth -= opponentPower;
+                System.out.printf("%s strikes back for %d damage.%n", opponentName, opponentPower);
+            }
+
+            if (playerHealth <= 0) {
+                playerHealth = 0;
+            }
+
+            if (!isAlive) {
+                System.out.println("\nYou fled the battle! You managed to escape with your life.");
+                playing = false;
+            } else if (opponentHealth <= 0) {
+                System.out.printf("\nVictory! You defeated %s in %d turns!%n", opponentName, turnNumber);
+                playing = false;
+            } else if (playerHealth <= 0) {
+                System.out.printf("\nYou died in the arena on turn %d! The crowd jeers.%n", turnNumber);
+                playing = false;
+            }
+
+            turnNumber++;
+            System.out.println("");
+        }
+
+        System.out.println("Game Over.");
     }
 }
