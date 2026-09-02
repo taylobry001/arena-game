@@ -1,7 +1,6 @@
 import java.util.Scanner;
 
 public class Main {
-
     static final int MAX_HEALTH = 100;
     static final double CRIT_CHANCE = 0.25;
 
@@ -15,33 +14,46 @@ public class Main {
 
         System.out.print("What is your name, challenger? ");
         String playerName = in.nextLine().trim();
+
         if (playerName.isEmpty()) {
             playerName = "Fighter";
         }
 
         int difficulty;
+
         do {
             System.out.print("Difficulty (1 = easy, 2 = normal, 3 = brutal): ");
+
             while (!in.hasNextInt()) {
                 System.out.print("Numbers only. Try again: ");
                 in.next();
             }
+
             difficulty = in.nextInt();
         } while (difficulty < 1 || difficulty > 3);
-        in.nextLine(); 
+
+        in.nextLine();
+
+        String difficultyName = switch (difficulty) {
+            case 1 -> "Easy";
+            case 2 -> "Normal";
+            case 3 -> "Brutal";
+            default -> "Unknown";
+        };
 
         int playerHealth = MAX_HEALTH;
         double playerSpeed = 7.5;
         boolean isAlive = true;
 
         String opponentName = "Shadow";
-        int opponentHealth = 40 * difficulty; 
-        int opponentPower = 5 + (difficulty * 5); 
+        int opponentHealth = 40 * difficulty;
+        int opponentPower = 5 + (difficulty * 5);
+        int potions = 2;
 
         System.out.printf("%n%s enters the arena to face %s!%n", playerName, opponentName);
+        System.out.println("Difficulty: " + difficultyName);
         System.out.print("Press Enter to begin...");
         in.nextLine();
-        System.out.println("");
 
         int turnNumber = 1;
         boolean playing = true;
@@ -51,31 +63,66 @@ public class Main {
             System.out.println("Player: " + playerName + " (HP: " + playerHealth + "/" + MAX_HEALTH + ")");
             System.out.println("Speed: " + playerSpeed + " | Alive: " + isAlive);
             System.out.println("Opponent: " + opponentName + " (HP: " + opponentHealth + " | Power: " + opponentPower + ")");
+            System.out.printf("You have %d %s left.%n", potions, potions == 1 ? "potion" : "potions");
+
+            String healthStatus = playerHealth >= 50 ? "steady" : "faltering";
+            System.out.println("Your health is " + healthStatus + ".");
+
             System.out.println("");
-            
-            System.out.print("Actions: [A]ttack, [F]lee, [S]tatus (Free): ");
+            System.out.print("[A]ttack [D]efend [P]otion [F]lee: ");
             String action = in.nextLine().trim().toUpperCase();
 
-            if (action.equals("S")) {
-                System.out.printf("%n--- CHARACTER SHEET ---%n");
-                System.out.printf("Crit Chance: %.0f%%%n", CRIT_CHANCE * 100);
-                System.out.printf("-----------------------%n%n");
-                continue; 
+            switch (action) {
+                case "A" -> {
+                    int roll = (turnNumber * 3) % 10 + 1;
+
+                    if (roll >= 9) {
+                        int playerDamage = opponentPower * 2;
+                        System.out.printf("Critical hit! You strike %s for %d damage!%n", opponentName, playerDamage);
+                        opponentHealth -= playerDamage;
+                    } else if (roll >= 3) {
+                        int playerDamage = opponentPower;
+                        System.out.printf("Solid hit! You strike %s for %d damage!%n", opponentName, playerDamage);
+                        opponentHealth -= playerDamage;
+                    } else {
+                        System.out.println("You miss!");
+                    }
+                }
+
+                case "D" -> {
+                    System.out.println("You defend and recover 5 HP.");
+                    playerHealth += 5;
+
+                    if (playerHealth > MAX_HEALTH) {
+                        playerHealth = MAX_HEALTH;
+                    }
+                }
+
+                case "P" -> {
+                    if (potions > 0) {
+                        potions--;
+                        playerHealth += 25;
+
+                        if (playerHealth > MAX_HEALTH) {
+                            playerHealth = MAX_HEALTH;
+                        }
+
+                        System.out.println("You use a potion and recover 25 HP.");
+                    } else {
+                        System.out.println("You have no potions.");
+                    }
+                }
+
+                case "F" -> {
+                    isAlive = false;
+                }
+
+                default -> {
+                    System.out.println("You hesitate and stumble around!");
+                }
             }
 
-            if (action.equals("A")) {
-                int roll = (turnNumber * 3) % 10 + 1;
-                int playerDamage = 8 + roll;
-                
-                System.out.printf("You strike %s with an attack roll of %d for %d damage!%n", opponentName, roll, playerDamage);
-                opponentHealth -= playerDamage;
-            } else if (action.equals("F")) {
-                isAlive = false; 
-            } else {
-                System.out.println("You hesitate and stumble around!");
-            }
-
-            if (isAlive && opponentHealth > 0) {
+            if (isAlive && opponentHealth > 0 && !action.equals("F")) {
                 playerHealth -= opponentPower;
                 System.out.printf("%s strikes back for %d damage.%n", opponentName, opponentPower);
             }
@@ -102,3 +149,4 @@ public class Main {
         System.out.println("Game Over.");
     }
 }
+
