@@ -51,7 +51,23 @@ public class Main {
         String opponentName = "Shadow";
         int opponentHealth = 40 * difficulty;
         int opponentPower = 5 + (difficulty * 5);
-        int potions = 2;
+
+        String[] pack = {"Potion", "Bomb", "Shield"};
+        int[] quantities = {2, 1, 0};
+        int slots = 3;
+
+        char[][] arena = new char[ROWS][COLS];
+
+        for (int row = 0; row < ROWS; row++) {
+            for (int col = 0; col < COLS; col++) {
+                if (row == 0 || row == ROWS - 1 ||
+                    col == 0 || col == COLS - 1) {
+                    arena[row][col] = '#';
+                } else {
+                    arena[row][col] = '.';
+                }
+            }
+        }
 
         int playerRow = 2;
         int playerCol = 1;
@@ -59,8 +75,15 @@ public class Main {
         int opponentRow = 2;
         int opponentCol = 9;
 
-        System.out.printf("%n%s enters the arena to face %s!%n", playerName, opponentName);
+        arena[playerRow][playerCol] = '@';
+        arena[opponentRow][opponentCol] = 'X';
+
+        System.out.printf("%n%s enters the arena to face %s!%n",
+                playerName, opponentName);
         System.out.println("Difficulty: " + difficultyName);
+
+        printInventory(pack, quantities, slots);
+
         System.out.print("Press Enter to begin...");
         in.nextLine();
 
@@ -68,6 +91,7 @@ public class Main {
 
         for (int countdown = 3; countdown >= 1; countdown--) {
             System.out.println(countdown + "...");
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -84,14 +108,17 @@ public class Main {
             System.out.println();
             System.out.println("--- TURN " + turnNumber + " ---");
 
-            drawArena(playerRow, playerCol, opponentRow, opponentCol);
+            drawArena(arena);
 
-            System.out.println("Player: " + playerName + " (HP: " + playerHealth + "/" + MAX_HEALTH + ")");
-            System.out.println("Speed: " + playerSpeed + " | Alive: " + isAlive);
-            System.out.println("Opponent: " + opponentName + " (HP: " + opponentHealth + " | Power: " + opponentPower + ")");
-            System.out.printf("You have %d %s left.%n",
-                    potions,
-                    potions == 1 ? "potion" : "potions");
+            System.out.println("Player: " + playerName +
+                    " (HP: " + playerHealth + "/" + MAX_HEALTH + ")");
+            System.out.println("Speed: " + playerSpeed +
+                    " | Alive: " + isAlive);
+            System.out.println("Opponent: " + opponentName +
+                    " (HP: " + opponentHealth +
+                    " | Power: " + opponentPower + ")");
+
+            printInventory(pack, quantities, slots);
 
             String healthStatus = playerHealth >= 50 ? "steady" : "faltering";
             System.out.println("Your health is " + healthStatus + ".");
@@ -105,20 +132,36 @@ public class Main {
 
             switch (action) {
                 case "L" -> {
-                    if (playerCol > 0) {
-                        playerCol--;
+                    int newCol = playerCol - 1;
+
+                    if (newCol >= 0 &&
+                        arena[playerRow][newCol] != '#' &&
+                        arena[playerRow][newCol] != 'X') {
+
+                        arena[playerRow][playerCol] = '.';
+                        playerCol = newCol;
+                        arena[playerRow][playerCol] = '@';
+
                         System.out.println("You move left.");
                     } else {
-                        System.out.println("The wall stops you!");
+                        System.out.println("You cannot move there!");
                     }
                 }
 
                 case "R" -> {
-                    if (playerCol < COLS - 1) {
-                        playerCol++;
+                    int newCol = playerCol + 1;
+
+                    if (newCol < COLS &&
+                        arena[playerRow][newCol] != '#' &&
+                        arena[playerRow][newCol] != 'X') {
+
+                        arena[playerRow][playerCol] = '.';
+                        playerCol = newCol;
+                        arena[playerRow][playerCol] = '@';
+
                         System.out.println("You move right.");
                     } else {
-                        System.out.println("The wall stops you!");
+                        System.out.println("You cannot move there!");
                     }
                 }
 
@@ -163,8 +206,8 @@ public class Main {
                 }
 
                 case "P" -> {
-                    if (potions > 0) {
-                        potions--;
+                    if (quantities[0] > 0) {
+                        quantities[0]--;
                         playerHealth += 25;
 
                         if (playerHealth > MAX_HEALTH) {
@@ -186,7 +229,10 @@ public class Main {
                 }
             }
 
-            if (isAlive && opponentHealth > 0 && !action.equals("F")) {
+            if (isAlive &&
+                opponentHealth > 0 &&
+                !action.equals("F")) {
+
                 int distance = Math.abs(playerCol - opponentCol);
 
                 if (distance == 1 && playerRow == opponentRow) {
@@ -209,17 +255,21 @@ public class Main {
                 System.out.println("\nYou fled the battle! You managed to escape with your life.");
                 playing = false;
             } else if (opponentHealth <= 0) {
+                arena[opponentRow][opponentCol] = '.';
+
                 System.out.printf(
                         "\nVictory! You defeated %s in %d turns!%n",
                         opponentName,
                         turnNumber
                 );
+
                 playing = false;
             } else if (playerHealth <= 0) {
                 System.out.printf(
                         "\nYou died in the arena on turn %d! The crowd jeers.%n",
                         turnNumber
                 );
+
                 playing = false;
             }
 
@@ -230,20 +280,22 @@ public class Main {
         in.close();
     }
 
-    static void drawArena(int playerRow, int playerCol, int opponentRow, int opponentCol) {
+    static void printInventory(String[] pack, int[] quantities, int slots) {
+        System.out.println("\n--- PACK ---");
+
+        for (int i = 0; i < slots; i++) {
+            System.out.println(pack[i] + ": " + quantities[i]);
+        }
+    }
+
+    static void drawArena(char[][] arena) {
         System.out.println("+-----------+");
 
-        for (int row = 0; row < ROWS; row++) {
+        for (char[] row : arena) {
             System.out.print("|");
 
-            for (int col = 0; col < COLS; col++) {
-                if (row == playerRow && col == playerCol) {
-                    System.out.print("@");
-                } else if (row == opponentRow && col == opponentCol) {
-                    System.out.print("X");
-                } else {
-                    System.out.print(".");
-                }
+            for (char cell : row) {
+                System.out.print(cell);
             }
 
             System.out.println("|");
